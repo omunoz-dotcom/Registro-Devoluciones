@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Devoluciones - Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-6 text-blue-700">Registro de Devolución</h2>
+
+        <div id="seccion-cabecera" class="space-y-4">
+            <input type="text" id="factura" placeholder="Número de Factura" class="w-full border p-2 rounded">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="w-full border p-2 rounded">
+            <input type="text" id="operador" placeholder="Operador Logístico" class="w-full border p-2 rounded">
+            <input type="text" id="conductor" placeholder="Nombre del Conductor" class="w-full border p-2 rounded">
+            <button onclick="fijarCabecera()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">Iniciar Registro de SKUs</button>
+        </div>
+
+        <div id="seccion-sku" class="hidden mt-6 border-t pt-4">
+            <div class="flex space-x-2">
+                <input type="text" id="sku" placeholder="Código SKU" class="flex-1 border p-2 rounded">
+                <button onclick="verificarSKU()" class="bg-green-600 text-white px-4 py-2 rounded">Verificar</button>
+            </div>
+            
+            <div id="info-producto" class="mt-4 hidden animate-pulse bg-gray-50 p-3 rounded">
+                <p class="font-semibold" id="desc-producto">Descripción: ---</p>
+                <input type="number" id="cantidad" placeholder="Cantidad Devuelta" class="w-full border mt-2 p-2 rounded">
+                <textarea id="motivo" placeholder="Motivo de devolución (Manual)" class="w-full border mt-2 p-2 rounded"></textarea>
+                <input type="file" id="evidencia" accept="image/*" class="mt-2 text-sm">
+                <button onclick="agregarALista()" class="w-full mt-4 bg-orange-500 text-white py-2 rounded">Guardar este SKU</button>
+            </div>
+        </div>
+
+        <div id="seccion-resumen" class="hidden mt-6 border-t pt-4">
+            <h3 class="font-bold text-lg mb-2">Resumen de Novedades</h3>
+            <table class="w-full text-left border-collapse text-sm mb-4">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 border">SKU</th>
+                        <th class="p-2 border">Cant.</th>
+                        <th class="p-2 border">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body"></tbody>
+            </table>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold">Firma del Cliente:</label>
+                    <canvas id="firma-cliente" class="border w-full h-24 bg-gray-50 rounded"></canvas>
+                    <input type="text" id="nombre-firma" placeholder="Nombre de quién firma" class="w-full border p-2 mt-1 rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold">Firma del Conductor:</label>
+                    <canvas id="firma-conductor" class="border w-full h-24 bg-gray-50 rounded"></canvas>
+                </div>
+                <button onclick="finalizarProceso()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold">CERRAR FACTURA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulación de Base de Datos en Firebase
+        const db_productos = {
+            "SKU001": "Aceite Vegetal 1L",
+            "SKU002": "Arroz Super Extra 5kg",
+            "SKU003": "Detergente Multiuso"
+        };
+
+        let itemsDevueltos = [];
+
+        function fijarCabecera() {
+            if(document.getElementById('factura').value === "") return alert("Ingrese factura");
+            document.getElementById('seccion-cabecera').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('seccion-sku').classList.remove('hidden');
+        }
+
+        function verificarSKU() {
+            const skuVal = document.getElementById('sku').value;
+            const desc = db_productos[skuVal];
+            
+            if(desc) {
+                document.getElementById('info-producto').classList.remove('hidden');
+                document.getElementById('desc-producto').innerText = "Descripción: " + desc;
+            } else {
+                alert("SKU no encontrado en la base de datos.");
+            }
+        }
+
+        function agregarALista() {
+            const item = {
+                sku: document.getElementById('sku').value,
+                desc: document.getElementById('desc-producto').innerText,
+                cant: document.getElementById('cantidad').value,
+                motivo: document.getElementById('motivo').value
+            };
+
+            itemsDevueltos.push(item);
+            renderizarTabla();
+            
+            // Reset campos SKU para el siguiente
+            document.getElementById('sku').value = "";
+            document.getElementById('info-producto').classList.add('hidden');
+            
+            if(confirm("¿Tiene otro SKU con novedad?")) {
+                // Se mantiene en la sección de SKU
+            } else {
+                document.getElementById('seccion-sku').classList.add('hidden');
+                document.getElementById('seccion-resumen').classList.remove('hidden');
+            }
+        }
+
+        function renderizarTabla() {
+            const tbody = document.getElementById('tabla-body');
+            tbody.innerHTML = itemsDevueltos.map((item, index) => `
+                <tr>
+                    <td class="p-2 border">${item.sku}</td>
+                    <td class="p-2 border">${item.cant}</td>
+                    <td class="p-2 border text-red-500 cursor-pointer" onclick="eliminarItem(${index})">Eliminar</td>
+                </tr>
+            `).join('');
+        }
+
+        function eliminarItem(index) {
+            itemsDevueltos.splice(index, 1);
+            renderizarTabla();
+        }
+
+        function finalizarProceso() {
+            alert("Enviando datos a Firebase y Storage...");
+            // Aquí iría la lógica de firebase.firestore().collection('devoluciones').add(...)
+            location.reload();
+        }
+    </script>
+</body>
+</html>
