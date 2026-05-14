@@ -3,13 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asistencia Diaria</title>
+
+  <title>ASISTENCIA DIARIA</title>
 
   <style>
 
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
     body{
-      font-family: Arial;
-      background:#f4f4f4;
+      font-family:Arial, sans-serif;
+      background:#f3f4f6;
       padding:30px;
     }
 
@@ -17,32 +24,41 @@
       max-width:700px;
       margin:auto;
       background:white;
-      padding:25px;
-      border-radius:10px;
-      box-shadow:0 0 10px rgba(0,0,0,0.1);
+      border-radius:12px;
+      padding:30px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.1);
     }
 
     h1{
       text-align:center;
       margin-bottom:30px;
+      color:#111827;
     }
 
     .persona{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:15px;
-      border-bottom:1px solid #ddd;
+      padding:18px 10px;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    .nombre{
+      font-size:20px;
+      font-weight:bold;
+      color:#111827;
     }
 
     .btn{
       background:#16a34a;
       color:white;
       border:none;
-      padding:10px 20px;
-      border-radius:8px;
+      padding:12px 25px;
+      border-radius:10px;
       cursor:pointer;
+      font-size:15px;
       font-weight:bold;
+      transition:0.3s;
     }
 
     .btn:hover{
@@ -50,9 +66,16 @@
     }
 
     .estado{
-      margin-left:10px;
-      color:#2563eb;
+      margin-left:15px;
       font-size:14px;
+      color:#2563eb;
+    }
+
+    .footer{
+      margin-top:25px;
+      text-align:center;
+      color:#6b7280;
+      font-size:13px;
     }
 
   </style>
@@ -67,11 +90,23 @@
 
   <div id="lista"></div>
 
+  <div class="footer">
+    Sistema conectado con Google Sheets
+  </div>
+
 </div>
 
 <script>
 
+// ============================================
+// URL WEB APP APPS SCRIPT
+// ============================================
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyps-lmk3cJzOQiozu6hSybcJQSyPuf6JS1jpho47XagZ5bH5fHzSqA01vU3LLiK_ztXw/exec";
+
+// ============================================
+// PERSONAS
+// ============================================
 
 const personas = [
   "CARLOS",
@@ -80,6 +115,10 @@ const personas = [
   "ITALO",
   "FREDDY"
 ];
+
+// ============================================
+// CREAR LISTA
+// ============================================
 
 const lista = document.getElementById("lista");
 
@@ -90,30 +129,40 @@ personas.forEach(nombre => {
   div.className = "persona";
 
   div.innerHTML = `
+  
     <div>
-      <strong>${nombre}</strong>
+      <span class="nombre">${nombre}</span>
       <span class="estado" id="estado-${nombre}"></span>
     </div>
 
     <button class="btn" onclick="registrar('${nombre}')">
       Registrar
     </button>
+
   `;
 
   lista.appendChild(div);
 
 });
 
+// ============================================
+// REGISTRAR ASISTENCIA
+// ============================================
+
 async function registrar(nombre){
 
   const estado = document.getElementById(`estado-${nombre}`);
 
-  estado.innerHTML = "Guardando...";
+  estado.innerHTML = "⏳ Guardando...";
 
   const datos = {
+
     nombre: nombre,
-    fecha: new Date().toLocaleDateString(),
-    hora: new Date().toLocaleTimeString()
+
+    fecha: new Date().toLocaleDateString('es-EC'),
+
+    hora: new Date().toLocaleTimeString('es-EC')
+
   };
 
   try{
@@ -136,13 +185,25 @@ async function registrar(nombre){
 
     console.log(result);
 
-    estado.innerHTML = "✅ Registrado";
+    if(result.includes("OK")){
+
+      estado.innerHTML = "✅ Registrado";
+
+    }else{
+
+      estado.innerHTML = "❌ Error";
+
+      alert(result);
+
+    }
 
   }catch(error){
 
     console.error(error);
 
     estado.innerHTML = "❌ Error";
+
+    alert(error);
 
   }
 
