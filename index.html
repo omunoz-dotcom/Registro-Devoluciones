@@ -1,139 +1,154 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Devoluciones - Logística</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistencia Diaria</title>
+
+  <style>
+
+    body{
+      font-family: Arial;
+      background:#f4f4f4;
+      padding:30px;
+    }
+
+    .container{
+      max-width:700px;
+      margin:auto;
+      background:white;
+      padding:25px;
+      border-radius:10px;
+      box-shadow:0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    .persona{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:15px;
+      border-bottom:1px solid #ddd;
+    }
+
+    .btn{
+      background:#16a34a;
+      color:white;
+      border:none;
+      padding:10px 20px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .btn:hover{
+      background:#15803d;
+    }
+
+    .estado{
+      margin-left:10px;
+      color:#2563eb;
+      font-size:14px;
+    }
+
+  </style>
+
 </head>
-<body class="bg-gray-100 p-4">
 
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold mb-6 text-blue-700">Registro de Devolución</h2>
+<body>
 
-        <div id="seccion-cabecera" class="space-y-4">
-            <input type="text" id="factura" placeholder="Número de Factura" class="w-full border p-2 rounded">
-            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="w-full border p-2 rounded">
-            <input type="text" id="operador" placeholder="Operador Logístico" class="w-full border p-2 rounded">
-            <input type="text" id="conductor" placeholder="Nombre del Conductor" class="w-full border p-2 rounded">
-            <button onclick="fijarCabecera()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">Iniciar Registro de SKUs</button>
-        </div>
+<div class="container">
 
-        <div id="seccion-sku" class="hidden mt-6 border-t pt-4">
-            <div class="flex space-x-2">
-                <input type="text" id="sku" placeholder="Código SKU" class="flex-1 border p-2 rounded">
-                <button onclick="verificarSKU()" class="bg-green-600 text-white px-4 py-2 rounded">Verificar</button>
-            </div>
-            
-            <div id="info-producto" class="mt-4 hidden animate-pulse bg-gray-50 p-3 rounded">
-                <p class="font-semibold" id="desc-producto">Descripción: ---</p>
-                <input type="number" id="cantidad" placeholder="Cantidad Devuelta" class="w-full border mt-2 p-2 rounded">
-                <textarea id="motivo" placeholder="Motivo de devolución (Manual)" class="w-full border mt-2 p-2 rounded"></textarea>
-                <input type="file" id="evidencia" accept="image/*" class="mt-2 text-sm">
-                <button onclick="agregarALista()" class="w-full mt-4 bg-orange-500 text-white py-2 rounded">Guardar este SKU</button>
-            </div>
-        </div>
+  <h1>ASISTENCIA DIARIA</h1>
 
-        <div id="seccion-resumen" class="hidden mt-6 border-t pt-4">
-            <h3 class="font-bold text-lg mb-2">Resumen de Novedades</h3>
-            <table class="w-full text-left border-collapse text-sm mb-4">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="p-2 border">SKU</th>
-                        <th class="p-2 border">Cant.</th>
-                        <th class="p-2 border">Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-body"></tbody>
-            </table>
+  <div id="lista"></div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold">Firma del Cliente:</label>
-                    <canvas id="firma-cliente" class="border w-full h-24 bg-gray-50 rounded"></canvas>
-                    <input type="text" id="nombre-firma" placeholder="Nombre de quién firma" class="w-full border p-2 mt-1 rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold">Firma del Conductor:</label>
-                    <canvas id="firma-conductor" class="border w-full h-24 bg-gray-50 rounded"></canvas>
-                </div>
-                <button onclick="finalizarProceso()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold">CERRAR FACTURA</button>
-            </div>
-        </div>
+</div>
+
+<script>
+
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyps-lmk3cJzOQiozu6hSybcJQSyPuf6JS1jpho47XagZ5bH5fHzSqA01vU3LLiK_ztXw/exec";
+
+const personas = [
+  "CARLOS",
+  "RUBEN",
+  "MARIO",
+  "ITALO",
+  "FREDDY"
+];
+
+const lista = document.getElementById("lista");
+
+personas.forEach(nombre => {
+
+  const div = document.createElement("div");
+
+  div.className = "persona";
+
+  div.innerHTML = `
+    <div>
+      <strong>${nombre}</strong>
+      <span class="estado" id="estado-${nombre}"></span>
     </div>
 
-    <script>
-        // Simulación de Base de Datos en Firebase
-        const db_productos = {
-            "SKU001": "Aceite Vegetal 1L",
-            "SKU002": "Arroz Super Extra 5kg",
-            "SKU003": "Detergente Multiuso"
-        };
+    <button class="btn" onclick="registrar('${nombre}')">
+      Registrar
+    </button>
+  `;
 
-        let itemsDevueltos = [];
+  lista.appendChild(div);
 
-        function fijarCabecera() {
-            if(document.getElementById('factura').value === "") return alert("Ingrese factura");
-            document.getElementById('seccion-cabecera').classList.add('opacity-50', 'pointer-events-none');
-            document.getElementById('seccion-sku').classList.remove('hidden');
-        }
+});
 
-        function verificarSKU() {
-            const skuVal = document.getElementById('sku').value;
-            const desc = db_productos[skuVal];
-            
-            if(desc) {
-                document.getElementById('info-producto').classList.remove('hidden');
-                document.getElementById('desc-producto').innerText = "Descripción: " + desc;
-            } else {
-                alert("SKU no encontrado en la base de datos.");
-            }
-        }
+async function registrar(nombre){
 
-        function agregarALista() {
-            const item = {
-                sku: document.getElementById('sku').value,
-                desc: document.getElementById('desc-producto').innerText,
-                cant: document.getElementById('cantidad').value,
-                motivo: document.getElementById('motivo').value
-            };
+  const estado = document.getElementById(`estado-${nombre}`);
 
-            itemsDevueltos.push(item);
-            renderizarTabla();
-            
-            // Reset campos SKU para el siguiente
-            document.getElementById('sku').value = "";
-            document.getElementById('info-producto').classList.add('hidden');
-            
-            if(confirm("¿Tiene otro SKU con novedad?")) {
-                // Se mantiene en la sección de SKU
-            } else {
-                document.getElementById('seccion-sku').classList.add('hidden');
-                document.getElementById('seccion-resumen').classList.remove('hidden');
-            }
-        }
+  estado.innerHTML = "Guardando...";
 
-        function renderizarTabla() {
-            const tbody = document.getElementById('tabla-body');
-            tbody.innerHTML = itemsDevueltos.map((item, index) => `
-                <tr>
-                    <td class="p-2 border">${item.sku}</td>
-                    <td class="p-2 border">${item.cant}</td>
-                    <td class="p-2 border text-red-500 cursor-pointer" onclick="eliminarItem(${index})">Eliminar</td>
-                </tr>
-            `).join('');
-        }
+  const datos = {
+    nombre: nombre,
+    fecha: new Date().toLocaleDateString(),
+    hora: new Date().toLocaleTimeString()
+  };
 
-        function eliminarItem(index) {
-            itemsDevueltos.splice(index, 1);
-            renderizarTabla();
-        }
+  try{
 
-        function finalizarProceso() {
-            alert("Enviando datos a Firebase y Storage...");
-            // Aquí iría la lógica de firebase.firestore().collection('devoluciones').add(...)
-            location.reload();
-        }
-    </script>
+    const response = await fetch(WEB_APP_URL, {
+
+      method: "POST",
+
+      mode: "cors",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body: JSON.stringify(datos)
+
+    });
+
+    const result = await response.text();
+
+    console.log(result);
+
+    estado.innerHTML = "✅ Registrado";
+
+  }catch(error){
+
+    console.error(error);
+
+    estado.innerHTML = "❌ Error";
+
+  }
+
+}
+
+</script>
+
 </body>
 </html>
